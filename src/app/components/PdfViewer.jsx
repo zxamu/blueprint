@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { FaDownload, FaExternalLinkAlt } from 'react-icons/fa';
 
 // Configuración del worker de PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -22,8 +23,22 @@ export function PdfViewer({ file }) {
 
   const pdfPath = `/planos/${file}`;
 
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = pdfPath;
+    link.download = file; // Usa el nombre del archivo para la descarga
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleOpenNewTab = () => {
+    window.open(pdfPath, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="w-full h-full bg-gray-200 p-4 overflow-y-auto">
+    // Contenedor principal con posición relativa
+    <div className="relative w-full h-full bg-gray-200 overflow-y-auto">
       <Document
         file={pdfPath}
         onLoadSuccess={onDocumentLoadSuccess}
@@ -41,6 +56,24 @@ export function PdfViewer({ file }) {
           />
         ))}
       </Document>
+
+      {/* --- Botones Flotantes --- */}
+      <div className="absolute bottom-4 left-4 z-10 flex flex-col space-y-2">
+        <button
+          onClick={handleDownload}
+          className="w-10 h-10 rounded-full bg-gray-600 text-white flex items-center justify-center shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          title="Descargar PDF"
+        >
+          <FaDownload />
+        </button>
+        <button
+          onClick={handleOpenNewTab}
+          className="w-10 h-10 rounded-full bg-gray-600 text-white flex items-center justify-center shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          title="Ver en nueva pestaña"
+        >
+          <FaExternalLinkAlt />
+        </button>
+      </div>
     </div>
   );
 }
