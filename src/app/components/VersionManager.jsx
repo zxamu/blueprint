@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { FaPlus } from 'react-icons/fa';
+import { useAuth } from '@/context/AuthContext'; // 1. Se importa el hook de autenticación
 
 const VersionCard = dynamic(
   () => import('./VersionCard').then(mod => mod.VersionCard),
@@ -12,6 +13,7 @@ const VersionCard = dynamic(
   }
 );
 
+// Este componente no se modifica
 function ViewTabs() {
   return (
     <div className="flex border-b border-gray-800">
@@ -26,8 +28,12 @@ function ViewTabs() {
 }
 
 export function VersionManager({ plano, onVersionAdded, selectedVersionFile, onVersionSelect }) {
+  const { user } = useAuth(); // 2. Se obtiene el usuario del contexto
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef(null);
+
+  // Se define la condición para verificar si el usuario puede escribir
+  const canWrite = user && (user.rol === 'administrador' || user.rol === 'lectura y escritura');
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
@@ -58,22 +64,28 @@ export function VersionManager({ plano, onVersionAdded, selectedVersionFile, onV
   return (
     <div className="w-full bg-gray-800 flex flex-col h-40">
       <div className="flex-grow p-4 flex items-center space-x-4 overflow-x-auto">
-        <button
-          onClick={handleAddClick}
-          disabled={isUploading}
-          className="flex-shrink-0 w-20 h-20 bg-indigo-600 hover:bg-indigo-200 rounded-lg flex flex-col items-center justify-center text-white"
-          title="Agregar nueva versión"
-        >
-          {isUploading ? <p className="text-xs">Subiendo...</p> : <FaPlus size={20} />}
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".pdf"
-        />
-        {/* Se invierte el array para mostrar del más nuevo al más antiguo */}
+        {/* 3. Se añade la condición para mostrar el botón solo si el usuario tiene permisos */}
+        {canWrite && (
+          <>
+            <button
+              onClick={handleAddClick}
+              disabled={isUploading}
+              className="flex-shrink-0 w-20 h-20 bg-indigo-600 hover:bg-indigo-200 rounded-lg flex flex-col items-center justify-center text-white"
+              title="Agregar nueva versión"
+            >
+              {isUploading ? <p className="text-xs">Subiendo...</p> : <FaPlus size={20} />}
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf"
+            />
+          </>
+        )}
+        
+        {/* El resto del componente no se modifica */}
         <div className="flex items-center space-x-4">
           {[...plano.versiones].reverse().map((version) => (
             <VersionCard
@@ -88,4 +100,3 @@ export function VersionManager({ plano, onVersionAdded, selectedVersionFile, onV
     </div>
   );
 }
-
